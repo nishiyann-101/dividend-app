@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="売買管理">
+<title>売買管理アプリ</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0f172a;font-family:'Hiragino Sans',sans-serif;color:#e2e8f0;font-size:14px}
+input,button{font-family:inherit}
+input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1)}
+.hidden{display:none!important}
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;min-width:500px}
+th{text-align:left;padding:7px 8px;font-size:12px;color:#64748b;font-weight:600;white-space:nowrap;border-bottom:1px solid rgba(255,255,255,0.08)}
+td{padding:8px;font-size:12px;white-space:nowrap;border-bottom:1px solid rgba(255,255,255,0.04)}
+.bn{background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.35);padding:2px 6px;border-radius:5px;font-size:10px;font-weight:700}
+.bt{background:rgba(148,163,184,0.15);color:#94a3b8;border:1px solid rgba(148,163,184,0.25);padding:2px 6px;border-radius:5px;font-size:10px;font-weight:700}
+.bb{background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
+.bs{background:rgba(239,68,68,0.15);color:#ef4444;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
+.bp{background:rgba(99,102,241,0.15);color:#a5b4fc;border:1px solid rgba(99,102,241,0.3);padding:2px 6px;border-radius:5px;font-size:10px;font-weight:700}
+.ifield{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:7px;padding:8px 10px;color:#e2e8f0;outline:none;font-size:13px}
+.card{background:rgba(255,255,255,0.05);border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,0.08);margin-bottom:12px}
+#savebadge{position:fixed;bottom:16px;right:16px;background:rgba(34,197,94,0.9);color:#fff;padding:6px 13px;border-radius:16px;font-size:12px;font-weight:700;z-index:200;opacity:0;pointer-events:none}
+#toastmsg{position:fixed;left:10%;bottom:24px;width:80%;text-align:center;background:rgba(30,41,59,0.97);color:#e2e8f0;padding:10px 16px;border-radius:20px;font-size:12px;font-weight:700;z-index:220;opacity:0;pointer-events:none;border:1px solid rgba(255,255,255,0.12)}
+#modal-bg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);z-index:100;padding:16px;overflow-y:auto}
+#modal-box{background:#1e293b;border-radius:14px;padding:20px;width:100%;max-width:440px;margin:20px auto}
+.flabel{font-size:11px;color:#94a3b8;margin-bottom:4px;display:block}
+.tbtn{padding:10px;border-radius:7px;border:2px solid rgba(255,255,255,0.1);cursor:pointer;background:transparent;color:#64748b;font-weight:700;font-size:13px;width:49%}
+.tbtn-on-buy{border-color:#22c55e;background:rgba(34,197,94,0.15);color:#22c55e}
+.tbtn-on-sell{border-color:#ef4444;background:rgba(239,68,68,0.15);color:#ef4444}
+.abtn{padding:10px 8px;border-radius:8px;border:2px solid rgba(255,255,255,0.1);cursor:pointer;background:transparent;text-align:left;width:49%}
+.abtn-nisa{border-color:#fbbf24;background:rgba(251,191,36,0.12)}
+.abtn-toku{border-color:#94a3b8;background:rgba(148,163,184,0.12)}
+.fbtn{padding:7px 4px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;font-size:11px;font-weight:600;background:transparent;color:#64748b;width:32%}
+.fbtn-blue{border-color:#60a5fa;background:rgba(96,165,250,0.15);color:#60a5fa}
+.fbtn-gold{border-color:#fbbf24;background:rgba(251,191,36,0.15);color:#fbbf24}
+.btn-edit{background:rgba(251,191,36,0.15);color:#fbbf24;border:none;border-radius:5px;padding:4px 9px;cursor:pointer;font-size:11px;font-weight:600}
+.btn-del{background:rgba(239,68,68,0.15);color:#ef4444;border:none;border-radius:5px;padding:4px 9px;cursor:pointer;font-size:11px;font-weight:600}
+</style>
+</head>
+<body>
+
+<!-- ヘッダー -->
+<div style="background:rgba(255,255,255,0.04);border-bottom:1px solid rgba(255,255,255,0.08);padding:12px 14px">
+  <div style="margin-bottom:10px">
+    <span style="font-size:18px;font-weight:700;color:#f1f5f9">📈 売買管理アプリ</span>
+    <span id="cloudStatus" style="float:right;padding:4px 10px;border-radius:999px;border:1px solid rgba(59,130,246,0.3);background:rgba(59,130,246,0.08);color:#93c5fd;font-size:11px;font-weight:700">保存中</span>
+  </div>
+  <!-- タブ -->
+  <div style="overflow-x:auto;white-space:nowrap;margin-bottom:0;padding-bottom:2px">
+    <button id="tab-dashboard" onclick="showTab('dashboard')" style="padding:7px 12px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:600;background:#3b82f6;color:#fff;margin-right:5px">ダッシュボード</button>
+    <button id="tab-trades" onclick="showTab('trades')" style="padding:7px 12px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:600;background:rgba(255,255,255,0.07);color:#94a3b8;margin-right:5px">売買履歴</button>
+    <button id="tab-holdings" onclick="showTab('holdings')" style="padding:7px 12px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:600;background:rgba(255,255,255,0.07);color:#94a3b8;margin-right:5px">保有株</button>
+    <button id="tab-chart" onclick="showTab('chart')" style="padding:7px 12px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:600;background:rgba(255,255,255,0.07);color:#94a3b8;margin-right:5px">グラフ</button>
+    <button id="tab-settings" onclick="showTab('settings')" style="padding:7px 12px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:600;background:rgba(255,255,255,0.07);color:#94a3b8">⚙設定</button>
+  </div>
+</div>
+
+<div style="max-width:1100px;margin:0 auto;padding:14px 12px 40px">
+
+<!-- ダッシュボード -->
+<div id="page-dashboard">
+  <!-- ボタンエリア：2列固定 -->
+  <div style="margin-bottom:14px">
+    <div style="margin-bottom:6px">
+      <button onclick="openAdd()" style="width:49%;margin-right:2%;padding:10px 4px;border-radius:8px;border:none;cursor:pointer;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;font-weight:700;font-size:12px">＋ 取引を追加</button>
+      <button onclick="showTab('trades')" style="width:49%;padding:10px 4px;border-radius:8px;border:1px solid rgba(251,191,36,0.4);cursor:pointer;background:rgba(251,191,36,0.1);color:#fbbf24;font-weight:700;font-size:12px">✏️ 修正・削除</button>
+    </div>
+    <div style="margin-bottom:6px">
+      <button onclick="doCSV()" style="width:49%;margin-right:2%;padding:10px 4px;border-radius:8px;border:1px solid rgba(34,197,94,0.4);cursor:pointer;background:rgba(34,197,94,0.1);color:#22c55e;font-weight:700;font-size:12px">📥 CSV保存</button>
+      <button onclick="saveToGoogle()" style="width:49%;padding:10px 4px;border-radius:8px;border:1px solid rgba(139,92,246,0.4);cursor:pointer;background:rgba(139,92,246,0.1);color:#a78bfa;font-weight:700;font-size:12px">☁ Google保存</button>
+    </div>
+    <div>
+      <button onclick="loadFromGoogle()" style="width:49%;padding:10px 4px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);cursor:pointer;background:rgba(255,255,255,0.06);color:#94a3b8;font-weight:600;font-size:12px">☁ Google読込</button>
+    </div>
+  </div>
+
+  <!-- サマリー：2列固定 -->
+  <div style="margin-bottom:12px">
+    <div style="margin-bottom:8px">
+      <div id="sum0" style="width:49%;margin-right:2%;display:inline-block;vertical-align:top;background:rgba(255,255,255,0.05);border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,0.08)"></div>
+      <div id="sum1" style="width:49%;display:inline-block;vertical-align:top;background:rgba(255,255,255,0.05);border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,0.08)"></div>
+    </div>
+    <div>
+      <div id="sum2" style="width:49%;margin-right:2%;display:inline-block;vertical-align:top;background:rgba(255,255,255,0.05);border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,0.08)"></div>
+      <div id="sum3" style="width:49%;display:inline-block;vertical-align:top;background:rgba(255,255,255,0.05);border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,0.08)"></div>
+    </div>
+  </div>
+
+  <!-- 自動保存バナー -->
+  <div style="background:rgba(34,197,94,0.04);border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:12px 14px;margin-bottom:12px">
+    <div style="font-weight:700;color:#22c55e;font-size:13px">💾 3重バックアップ対応</div>
+    <div style="font-size:11px;color:#64748b;margin-top:2px">自動保存 + CSV + Google Sheets</div>
+  </div>
+
+  <!-- 直近の取引 -->
+  <div class="card">
+    <div style="font-weight:700;color:#f1f5f9;margin-bottom:12px;font-size:14px">📋 直近の取引</div>
+    <div class="tscroll"><table id="recent-table"></table></div>
+  </div>
+</div>
+
+<!-- 売買履歴 -->
+<div id="page-trades" class="hidden">
+  <div class="card">
+    <div style="font-weight:700;color:#f1f5f9;margin-bottom:10px;font-size:13px">🔍 検索・絞り込み</div>
+    <div style="margin-bottom:8px">
+      <span class="flabel">銘柄コード・銘柄名で検索</span>
+      <input class="ifield" type="text" id="kw" placeholder="例：7203 または トヨタ" oninput="renderTrades()">
+    </div>
+    <div style="margin-bottom:8px">
+      <div style="width:49%;margin-right:2%;display:inline-block;vertical-align:top">
+        <span class="flabel">取引日（開始）</span>
+        <input class="ifield" type="date" id="df" onchange="renderTrades()">
+      </div>
+      <div style="width:49%;display:inline-block;vertical-align:top">
+        <span class="flabel">取引日（終了）</span>
+        <input class="ifield" type="date" id="dt" onchange="renderTrades()">
+      </div>
+    </div>
+    <div style="margin-bottom:8px">
+      <span class="flabel">売買</span>
+      <div>
+        <button class="fbtn fbtn-blue" id="ft-all" onclick="setFType('all')" style="margin-right:2%">すべて</button>
+        <button class="fbtn" id="ft-buy" onclick="setFType('buy')" style="margin-right:2%">買い</button>
+        <button class="fbtn" id="ft-sell" onclick="setFType('sell')">売り</button>
+      </div>
+    </div>
+    <div style="margin-bottom:10px">
+      <span class="flabel">口座</span>
+      <div>
+        <button class="fbtn fbtn-gold" id="fa-all" onclick="setFAcc('all')" style="margin-right:2%">すべて</button>
+        <button class="fbtn" id="fa-nisa" onclick="setFAcc('nisa')" style="margin-right:2%">NISA</button>
+        <button class="fbtn" id="fa-toku" onclick="setFAcc('tokutei')">特定</button>
+      </div>
+    </div>
+    <div>
+      <button onclick="resetFilter()" style="padding:7px 14px;border-radius:7px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;background:rgba(255,255,255,0.06);color:#94a3b8;font-size:12px;font-weight:600;margin-right:8px">🔄 リセット</button>
+      <button onclick="doCSV()" style="padding:7px 14px;border-radius:7px;border:1px solid rgba(34,197,94,0.4);cursor:pointer;background:rgba(34,197,94,0.1);color:#22c55e;font-size:12px;font-weight:600">📥 CSV保存</button>
+    </div>
+  </div>
+  <div class="card">
+    <div style="font-weight:700;color:#f1f5f9;margin-bottom:12px;font-size:13px">📋 売買履歴 <span id="fcnt" style="font-size:12px;font-weight:400;color:#64748b"></span></div>
+    <div class="tscroll"><table id="trades-table"></table></div>
+  </div>
+</div>
+
+<!-- 保有株 -->
+<div id="page-holdings" class="hidden">
+  <div style="font-weight:700;color:#f1f5f9;margin-bottom:12px;font-size:14px">📦 保有株一覧</div>
+  <div id="hold-grid"></div>
+  <div id="realized-wrap"></div>
+</div>
+
+<!-- グラフ -->
+<div id="page-chart" class="hidden">
+  <div class="card">
+    <div style="font-weight:700;color:#f1f5f9;margin-bottom:12px">📊 銘柄別 実現損益</div>
+    <div id="bar-area"></div>
+  </div>
+  <div class="card">
+    <div style="font-weight:700;color:#f1f5f9;margin-bottom:12px">🥧 保有株の比率（投資額ベース）</div>
+    <div id="pie-area"></div>
+  </div>
+</div>
+
+<!-- 設定 -->
+<div id="page-settings" class="hidden">
+  <div style="background:rgba(139,92,246,0.06);border:1px solid rgba(139,92,246,0.2);border-radius:10px;padding:14px;margin-bottom:12px">
+    <div style="font-weight:700;color:#a78bfa;font-size:13px;margin-bottom:6px">☁ Googleドライブ連携設定</div>
+    <div style="font-size:11px;color:#64748b;line-height:1.7;margin-bottom:10px">Google Apps ScriptのURLを設定すると、機種変更後もデータを復元できます。</div>
+    <span class="flabel">Google Apps Script WebアプリURL</span>
+    <input class="ifield" type="text" id="gas-url" placeholder="https://script.google.com/macros/s/.../exec" style="margin-bottom:10px">
+    <div>
+      <button onclick="saveGasUrl()" style="padding:9px 16px;border-radius:8px;border:none;cursor:pointer;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;font-weight:700;font-size:13px;margin-right:8px">URLを保存</button>
+      <button onclick="testGas()" style="padding:9px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;background:rgba(255,255,255,0.06);color:#94a3b8;font-size:12px;font-weight:600">接続テスト</button>
+    </div>
+  </div>
+  <div class="card">
+    <div style="font-weight:700;color:#f1f5f9;margin-bottom:10px;font-size:14px">☁ クラウド操作</div>
+    <div style="margin-bottom:8px">
+      <button onclick="saveToGoogle()" style="width:49%;margin-right:2%;padding:10px 4px;border-radius:8px;border:1px solid rgba(139,92,246,0.4);cursor:pointer;background:rgba(139,92,246,0.1);color:#a78bfa;font-weight:700;font-size:13px">☁ Googleに保存</button>
+      <button onclick="loadFromGoogle()" style="width:49%;padding:10px 4px;border-radius:8px;border:1px solid rgba(34,197,94,0.4);cursor:pointer;background:rgba(34,197,94,0.1);color:#22c55e;font-weight:700;font-size:13px">☁ Google読込</button>
+    </div>
+    <div style="font-size:11px;color:#64748b;line-height:1.8">
+      <div>・機種変更後は「Google読込」でデータを復元できます</div>
+    </div>
+  </div>
+  <div class="card">
+    <div style="font-weight:700;color:#f1f5f9;margin-bottom:10px;font-size:14px">💾 バックアップ状況</div>
+    <div style="font-size:12px;line-height:2.2">
+      <div>✅ 自動保存（ローカル）：取引操作のたびに自動保存</div>
+      <div>📥 CSVバックアップ：手動でファイル保存</div>
+      <div>☁ Google：<span id="gas-status-text" style="color:#64748b">URLが未設定です</span></div>
+    </div>
+    <div style="margin-top:12px">
+      <button onclick="doCSV()" style="padding:10px 18px;border-radius:8px;border:1px solid rgba(34,197,94,0.4);cursor:pointer;background:rgba(34,197,94,0.1);color:#22c55e;font-weight:700;font-size:13px">📥 今すぐCSVバックアップ</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- モーダル -->
+<div id="modal-bg" class="hidden">
+  <div id="modal-box">
+    <div style="display:table;width:100%;margin-bottom:16px">
+      <div id="modal-title" style="display:table-cell;font-weight:700;font-size:16px;color:#f1f5f9"></div>
+      <button onclick="closeModal()" style="display:table-cell;text-align:right;background:transparent;border:none;cursor:pointer;color:#64748b;font-size:20px;vertical-align:top">✕</button>
+    </div>
+    <div style="margin-bottom:10px">
+      <div style="width:49%;margin-right:2%;display:inline-block;vertical-align:top">
+        <span class="flabel">銘柄コード</span>
+        <input class="ifield" type="text" id="f-code" oninput="updateAmt()">
+      </div>
+      <div style="width:49%;display:inline-block;vertical-align:top">
+        <span class="flabel">銘柄名</span>
+        <input class="ifield" type="text" id="f-name">
+      </div>
+    </div>
+    <div style="margin-bottom:10px">
+      <span class="flabel">取引日</span>
+      <input class="ifield" type="date" id="f-date">
+    </div>
+    <div style="margin-bottom:10px">
+      <span class="flabel">売買</span>
+      <div>
+        <button class="tbtn tbtn-on-buy" id="tbuy" onclick="setType('buy')" style="margin-right:2%">買い</button>
+        <button class="tbtn" id="tsell" onclick="setType('sell')">売り</button>
+      </div>
+    </div>
+    <div style="margin-bottom:10px">
+      <div style="width:49%;margin-right:2%;display:inline-block;vertical-align:top">
+        <span class="flabel">単価（円）</span>
+        <input class="ifield" type="number" id="f-price" oninput="updateAmt()">
+      </div>
+      <div style="width:49%;display:inline-block;vertical-align:top">
+        <span class="flabel">株数</span>
+        <input class="ifield" type="number" id="f-qty" oninput="updateAmt()">
+      </div>
+    </div>
+    <div style="margin-bottom:10px">
+      <span class="flabel">口座の種類</span>
+      <div>
+        <button class="abtn abtn-nisa" id="anisa" onclick="setAcc('nisa')" style="margin-right:2%">
+          <div id="anisa-title" style="font-weight:700;font-size:12px;color:#fbbf24">🌟 NISA口座</div>
+          <div style="font-size:10px;color:#64748b;margin-top:2px">非課税・長期保有向け</div>
+        </button>
+        <button class="abtn" id="atoku" onclick="setAcc('tokutei')">
+          <div style="font-weight:700;font-size:12px;color:#64748b">🏦 特定口座</div>
+          <div style="font-size:10px;color:#64748b;margin-top:2px">源泉徴収あり</div>
+        </button>
+      </div>
+    </div>
+    <div id="amt-box" style="display:none;margin-bottom:10px;background:rgba(59,130,246,0.1);border-radius:8px;padding:10px 13px;border:1px solid rgba(59,130,246,0.2)">
+      <div style="font-size:11px;color:#94a3b8">取引金額</div>
+      <div id="amt-val" style="font-weight:700;color:#60a5fa;font-size:15px;margin-top:3px"></div>
+    </div>
+    <div>
+      <button onclick="closeModal()" style="width:49%;margin-right:2%;padding:11px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:#94a3b8;cursor:pointer;font-weight:600;font-size:14px">キャンセル</button>
+      <button id="btn-submit" onclick="submitForm()" style="width:49%;padding:11px;border-radius:8px;border:none;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;cursor:pointer;font-weight:700;font-size:14px">追加する</button>
+    </div>
+  </div>
+</div>
+
+<div id="savebadge">✅ 自動保存しました</div>
+<div id="toastmsg"></div>
+
+<script>
+var SKEY = "smgr_v4";
+var GASKEY = "smgr_gas_url";
+var COLORS = ["#22c55e","#ef4444","#3b82f6","#f59e0b","#8b5cf6","#ec4899","#14b8a6","#f97316"];
+var currentType = "buy";
+var currentAcc = "nisa";
+var editingId = null;
+var filterType = "all";
+var filterAcc = "all";
+var sortK = "date";
+var sortUp = false;
+var currentTab = "dashboard";
+var gasUrl = "";
+
+function ge(id) { return document.getElementById(id); }
+
+function showToast(msg) {
+  var el = ge("toastmsg");
+  el.textContent = msg;
+  el.style.opacity = "1";
+  setTimeout(function() { el.style.opacity = "0"; }, 2200);
+}
+
+function setCloudStatus(msg) {
+  var el = ge("cloudStatus");
+  if (el) el.textContent = msg;
+}
+
+function n(v) { return Number(v).toLocaleString(); }
+
+function zp(v) { return v < 10 ? "0" + v : String(v); }
+
+function holdStr(d) {
+  if (d >= 365) return Math.floor(d/365) + "\u5e74" + Math.floor((d%365)/30) + "\u30f6\u6708";
+  if (d >= 30) return Math.floor(d/30) + "\u30f6\u6708" + (d%30) + "\u65e5";
+  return d + "\u65e5";
+}
+
+function loadTrades() {
+  var s, parsed;
+  try {
+    s = localStorage.getItem(SKEY);
+    if (s) { parsed = JSON.parse(s); return parsed; }
+  } catch(e) {}
+  return [
+    {id:1,code:"7203",name:"\u30c8\u30e8\u30bf\u81ea\u52d5\u8eca",type:"buy",date:"2024-10-15",price:2800,qty:100,account:"nisa"},
+    {id:2,code:"7203",name:"\u30c8\u30e8\u30bf\u81ea\u52d5\u8eca",type:"sell",date:"2025-02-20",price:3050,qty:100,account:"nisa"},
+    {id:3,code:"6758",name:"\u30bd\u30cb\u30fc\u30b0\u30eb\u30fc\u30d7",type:"buy",date:"2025-01-10",price:13200,qty:50,account:"tokutei"},
+    {id:4,code:"9984",name:"\u30bd\u30d5\u30c8\u30d0\u30f3\u30afG",type:"buy",date:"2025-03-01",price:9400,qty:30,account:"tokutei"}
+  ];
+}
+
+var trades = loadTrades();
+
+function saveTrades() {
+  var el;
+  try {
+    localStorage.setItem(SKEY, JSON.stringify(trades));
+    el = ge("savebadge");
+    el.style.opacity = "1";
+    setTimeout(function() { el.style.opacity = "0"; }, 2000);
+    setCloudStatus("\u4fdd\u5b58\u6e08");
+  } catch(e) {}
+}
+
+function loadGasUrl() {
+  try { gasUrl = localStorage.getItem(GASKEY) || ""; } catch(e) { gasUrl = ""; }
+  var el = ge("gas-url");
+  if (el) el.value = gasUrl;
+  updateGasStatusRow();
+}
+
+function saveGasUrl() {
+  var v = ge("gas-url").value.trim();
+  gasUrl = v;
+  try { localStorage.setItem(GASKEY, v); } catch(e) {}
+  showToast(v ? "\u2601 URL\u3092\u4fdd\u5b58\u3057\u307e\u3057\u305f" : "URL\u3092\u30af\u30ea\u30a2\u3057\u307e\u3057\u305f");
+  updateGasStatusRow();
+}
+
+function updateGasStatusRow() {
+  var el = ge("gas-status-text");
+  if (!el) return;
+  if (gasUrl) {
+    el.style.color = "#22c55e";
+    el.textContent = "\u8a2d\u5b9a\u6e08\u307f";
+  } else {
+    el.style.color = "#64748b";
+    el.textContent = "URL\u304c\u672a\u8a2d\u5b9a\u3067\u3059";
+  }
+}
+
+function ab(account) {
+  return account === "nisa" ? "<span class='bn'>NISA</span>" : "<span class='bt'>\u7279\u5b9a</span>";
+}
+function tb2(type) {
+  return type === "buy" ? "<span class='bb'>\u8cb7\u3044</span>" : "<span class='bs'>\u58f2\u308a</span>";
+}
+function si(k) {
+  if (sortK !== k) return "<span style='opacity:0.3'>&#9660;</span>";
+  return sortUp ? "&#9650;" : "&#9660;";
+}
+
+function calcH() {
+  var map = {}, r = [], k, i, t, avg, x;
+  for (i = 0; i < trades.length; i++) {
+    t = trades[i];
+    if (t.type === "buy") {
+      if (!map[t.code]) map[t.code] = {code:t.code,name:t.name,qty:0,cost:0,account:t.account};
+      map[t.code].qty += t.qty;
+      map[t.code].cost += t.price * t.qty;
+    }
+  }
+  for (i = 0; i < trades.length; i++) {
+    t = trades[i];
+    if (t.type === "sell" && map[t.code] && map[t.code].qty > 0) {
+      avg = map[t.code].cost / map[t.code].qty;
+      map[t.code].qty -= t.qty;
+      map[t.code].cost -= avg * t.qty;
+    }
+  }
+  for (k in map) {
+    x = map[k];
+    if (x.qty > 0) { x.avg = Math.round(x.cost / x.qty); r.push(x); }
+  }
+  return r;
+}
+
+function calcR() {
+  var bm = {}, res = [], i, t, avg, pnl, days;
+  var sorted = trades.slice().sort(function(a,b) {
+    return a.date < b.date ? -1 : a.date > b.date ? 1 : 0;
+  });
+  for (i = 0; i < sorted.length; i++) {
+    t = sorted[i];
+    if (t.type === "buy") {
+      if (!bm[t.code]) bm[t.code] = {qty:0,cost:0,account:t.account,buyDate:t.date};
+      bm[t.code].qty += t.qty;
+      bm[t.code].cost += t.price * t.qty;
+    } else if (bm[t.code] && bm[t.code].qty > 0) {
+      avg = bm[t.code].cost / bm[t.code].qty;
+      pnl = Math.round(t.price * t.qty - avg * t.qty);
+      days = Math.round((new Date(t.date) - new Date(bm[t.code].buyDate)) / 86400000);
+      res.push({code:t.code,name:t.name,date:t.date,price:t.price,qty:t.qty,pnl:pnl,account:bm[t.code].account,holdDays:days});
+      bm[t.code].qty -= t.qty;
+      bm[t.code].cost -= avg * t.qty;
+    }
+  }
+  return res;
+}
+
+function getFiltered() {
+  var kw = ge("kw") ? ge("kw").value.toLowerCase().trim() : "";
+  var df = ge("df") ? ge("df").value : "";
+  var dt = ge("dt") ? ge("dt").value : "";
+  return trades.slice().sort(function(a,b) {
+    var va = a[sortK], vb = b[sortK];
+    if (va < vb) return sortUp ? -1 : 1;
+    if (va > vb) return sortUp ? 1 : -1;
+    return 0;
+  }).filter(function(t) {
+    if (kw && t.code.toLowerCase().indexOf(kw) < 0 && t.name.toLowerCase().indexOf(kw) < 0) return false;
+    if (df && t.date < df) return false;
+    if (dt && t.date > dt) return false;
+    if (filterType !== "all" && t.type !== filterType) return false;
+    if (filterAcc !== "all" && t.account !== filterAcc) return false;
+    return true;
+  });
+}
+
+function showTab(name) {
+  var pages = ["dashboard","trades","holdings","chart","settings"];
+  var tabStyles = {
+    on: "padding:7px 12px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:600;background:#3b82f6;color:#fff;margin-right:5px",
+    off: "padding:7px 12px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:600;background:rgba(255,255,255,0.07);color:#94a3b8;margin-right:5px",
+    offlast: "padding:7px 12px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:600;background:rgba(255,255,255,0.07);color:#94a3b8"
+  };
+  var i, p, tb;
+  currentTab = name;
+  for (i = 0; i < pages.length; i++) {
+    p = ge("page-" + pages[i]);
+    tb = ge("tab-" + pages[i]);
+    if (p) { if (pages[i] === name) p.classList.remove("hidden"); else p.classList.add("hidden"); }
+    if (tb) {
+      var isLast = (pages[i] === "settings");
+      tb.setAttribute("style", pages[i] === name ? tabStyles.on : (isLast ? tabStyles.offlast : tabStyles.off));
+    }
+  }
+  if (name === "dashboard") renderDashboard();
+  if (name === "trades") renderTrades();
+  if (name === "holdings") renderHoldings();
+  if (name === "chart") renderChart();
+  if (name === "settings") loadGasUrl();
+}
+
+function renderDashboard() {
+  var h = calcH(), r = calcR(), i, tPnL = 0, tInv = 0;
+  for (i = 0; i < r.length; i++) tPnL += r[i].pnl;
+  for (i = 0; i < h.length; i++) tInv += h[i].cost;
+
+  var pc = tPnL >= 0 ? "#22c55e" : "#ef4444";
+  ge("sum0").innerHTML = "<div style='font-size:11px;color:#94a3b8;margin-bottom:5px'>\u5b9f\u73fe\u640d\u76ca</div><div style='font-size:20px;font-weight:700;color:"+pc+"'>"+(tPnL>=0?"+":"")+n(tPnL)+"\u5186</div>";
+  ge("sum1").innerHTML = "<div style='font-size:11px;color:#94a3b8;margin-bottom:5px'>\u6295\u8cc4\u4e2d\u306e\u7dcf\u984d</div><div style='font-size:20px;font-weight:700;color:#60a5fa'>"+n(Math.round(tInv))+"\u5186</div>";
+  ge("sum2").innerHTML = "<div style='font-size:11px;color:#94a3b8;margin-bottom:5px'>\u4fdd\u6709\u9298\u67c4\u6570</div><div style='font-size:20px;font-weight:700;color:#f59e0b'>"+h.length+"\u9298\u67c4</div>";
+  ge("sum3").innerHTML = "<div style='font-size:11px;color:#94a3b8;margin-bottom:5px'>\u53d6\u5f15\u56de\u6570</div><div style='font-size:20px;font-weight:700;color:#8b5cf6'>"+trades.length+"\u56de</div>";
+
+  var rec = trades.slice().reverse().slice(0,5), i, t;
+  var html = "<thead><tr><th style='cursor:default'>\u65e5\u4ed8</th><th style='cursor:default'>\u30b3\u30fc\u30c9</th><th style='cursor:default'>\u9298\u67c4\u540d</th><th style='cursor:default'>\u58f2\u8cb7</th><th style='cursor:default'>\u682a\u6570</th><th style='cursor:default'>\u5358\u4fa1</th><th style='cursor:default'>\u53e3\u5ea7</th></tr></thead><tbody>";
+  for (i = 0; i < rec.length; i++) {
+    t = rec[i];
+    html += "<tr><td style='color:#94a3b8'>"+t.date+"</td><td style='color:#60a5fa;font-weight:700'>"+t.code+"</td><td>"+t.name+"</td><td>"+tb2(t.type)+"</td><td>"+n(t.qty)+"\u682a</td><td>"+n(t.price)+"\u5186</td><td>"+ab(t.account)+"</td></tr>";
+  }
+  ge("recent-table").innerHTML = html + "</tbody>";
+}
+
+function renderTrades() {
+  var filt = getFiltered(), i, t;
+  var fc = ge("fcnt");
+  if (fc) fc.textContent = filt.length + "\u4ef6 / \u5168" + trades.length + "\u4ef6";
+  var html = "<thead><tr>" +
+    "<th onclick='doSort(\"date\")'>\u65e5\u4ed8 "+si("date")+"</th>" +
+    "<th onclick='doSort(\"code\")'>\u30b3\u30fc\u30c9 "+si("code")+"</th>" +
+    "<th onclick='doSort(\"name\")'>\u9298\u67c4\u540d "+si("name")+"</th>" +
+    "<th onclick='doSort(\"type\")'>\u58f2\u8cb7 "+si("type")+"</th>" +
+    "<th onclick='doSort(\"qty\")'>\u682a\u6570 "+si("qty")+"</th>" +
+    "<th onclick='doSort(\"price\")'>\u5358\u4fa1 "+si("price")+"</th>" +
+    "<th style='cursor:default'>\u53e3\u5ea7</th><th style='cursor:default'>\u64cd\u4f5c</th></tr></thead><tbody>";
+  if (!filt.length) {
+    html += "<tr><td colspan='8' style='padding:24px;text-align:center;color:#64748b'>\u8a72\u5f53\u3059\u308b\u53d6\u5f15\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093</td></tr>";
+  } else {
+    for (i = 0; i < filt.length; i++) {
+      t = filt[i];
+      html += "<tr><td style='color:#94a3b8'>"+t.date+"</td><td style='color:#60a5fa;font-weight:700'>"+t.code+"</td><td>"+t.name+"</td><td>"+tb2(t.type)+"</td><td>"+n(t.qty)+"</td><td>"+n(t.price)+"\u5186</td><td>"+ab(t.account)+"</td><td><button class='btn-edit' onclick='openEdit("+t.id+")'>\u4fee\u6b63</button> <button class='btn-del' onclick='doDelete("+t.id+")'>\u524a\u9664</button></td></tr>";
+    }
+  }
+  ge("trades-table").innerHTML = html + "</tbody>";
+}
+
+function renderHoldings() {
+  var h = calcH(), r = calcR(), i, x, html = "", tPnL = 0;
+  for (i = 0; i < r.length; i++) tPnL += r[i].pnl;
+
+  if (!h.length) {
+    ge("hold-grid").innerHTML = "<div class='card' style='text-align:center;color:#64748b'>\u73fe\u5728\u4fdd\u6709\u3057\u3066\u3044\u308b\u682a\u306f\u3042\u308a\u307e\u305b\u3093</div>";
+  } else {
+    for (i = 0; i < h.length; i++) {
+      x = h[i];
+      html += "<div class='card'>" +
+        "<div style='margin-bottom:10px'>" +
+          "<span style='color:#60a5fa;font-weight:700;font-size:14px'>"+x.code+"</span>" +
+          "<span style='float:right'>"+ab(x.account)+"</span>" +
+        "</div>" +
+        "<div style='font-weight:600;font-size:13px;margin-bottom:10px'>"+x.name+"</div>" +
+        "<div style='margin-bottom:6px'>" +
+          "<div style='width:49%;margin-right:2%;display:inline-block;vertical-align:top;background:rgba(255,255,255,0.04);border-radius:7px;padding:8px 10px'>" +
+            "<div style='font-size:10px;color:#64748b;margin-bottom:2px'>\u4fdd\u6709\u682a\u6570</div>" +
+            "<div style='font-weight:700;font-size:13px'>"+n(x.qty)+"\u682a</div>" +
+          "</div>" +
+          "<div style='width:49%;display:inline-block;vertical-align:top;background:rgba(255,255,255,0.04);border-radius:7px;padding:8px 10px'>" +
+            "<div style='font-size:10px;color:#64748b;margin-bottom:2px'>\u5e73\u5747\u53d6\u5f97\u5358\u4fa1</div>" +
+            "<div style='font-weight:700;font-size:13px'>"+n(x.avg)+"\u5186</div>" +
+          "</div>" +
+        "</div>" +
+        "<div style='background:rgba(255,255,255,0.04);border-radius:7px;padding:8px 10px'>" +
+          "<div style='font-size:10px;color:#64748b;margin-bottom:2px'>\u6295\u8cc4\u7dcf\u984d</div>" +
+          "<div style='font-weight:700;font-size:13px;color:#f59e0b'>"+n(Math.round(x.cost))+"\u5186</div>" +
+        "</div>" +
+      "</div>";
+    }
+    ge("hold-grid").innerHTML = html;
+  }
+
+  var rw = ge("realized-wrap");
+  if (!r.length) { rw.innerHTML = ""; return; }
+  var pnlColor = tPnL >= 0 ? "#22c55e" : "#ef4444";
+  html = "<div class='card'><div style='font-weight:700;color:#f1f5f9;margin-bottom:12px'>\u2705 \u5b9f\u73fe\u640d\u76ca\uff08\u58f2\u5374\u6e08\u307f\uff09</div><div class='tscroll'><table><thead><tr><th style='cursor:default'>\u65e5\u4ed8</th><th style='cursor:default'>\u30b3\u30fc\u30c9</th><th style='cursor:default'>\u9298\u67c4\u540d</th><th style='cursor:default'>\u53e3\u5ea7</th><th style='cursor:default'>\u4fdd\u6709\u671f\u9593</th><th style='cursor:default'>\u682a\u6570</th><th style='cursor:default'>\u58f2\u5374\u5358\u4fa1</th><th style='cursor:default'>\u640d\u76ca</th></tr></thead><tbody>";
+  for (i = 0; i < r.length; i++) {
+    x = r[i];
+    var pc = x.pnl >= 0 ? "#22c55e" : "#ef4444";
+    html += "<tr><td style='color:#94a3b8'>"+x.date+"</td><td style='color:#60a5fa;font-weight:700'>"+x.code+"</td><td>"+x.name+"</td><td>"+ab(x.account)+"</td><td><span class='bp'>"+holdStr(x.holdDays)+"</span></td><td>"+n(x.qty)+"\u682a</td><td>"+n(x.price)+"\u5186</td><td style='font-weight:700;color:"+pc+"'>"+(x.pnl>=0?"+":"")+n(x.pnl)+"\u5186</td></tr>";
+  }
+  html += "<tr style='border-top:2px solid rgba(255,255,255,0.15)'><td colspan='7' style='padding:8px;font-weight:700;text-align:right'>\u5408\u8a08</td><td style='padding:8px;font-weight:700;font-size:15px;color:"+pnlColor+"'>"+(tPnL>=0?"+":"")+n(tPnL)+"\u5186</td></tr></tbody></table></div></div>";
+  rw.innerHTML = html;
+}
+
+function renderChart() {
+  var h = calcH(), r = calcR(), i, d, pct, c, bv, ratio, ang, x1, y1, x2, y2, lg, paths, legendHTML;
+  var pmap = {}, k, pd = [], maxA, total, sa, R, cx, cy;
+  for (i = 0; i < r.length; i++) pmap[r[i].name] = (pmap[r[i].name] || 0) + r[i].pnl;
+  for (k in pmap) pd.push({name:k, pnl:pmap[k]});
+
+  var ba = ge("bar-area");
+  if (!pd.length) {
+    ba.innerHTML = "<div style='color:#64748b;text-align:center;padding:32px'>\u58f2\u5374\u30c7\u30fc\u30bf\u304c\u3042\u308a\u307e\u305b\u3093</div>";
+  } else {
+    maxA = 0;
+    for (i = 0; i < pd.length; i++) if (Math.abs(pd[i].pnl) > maxA) maxA = Math.abs(pd[i].pnl);
+    if (maxA === 0) maxA = 1;
+    var bhtml = "<div style='display:table;width:100%;height:160px;vertical-align:bottom'><div style='display:table-row'>";
+    for (i = 0; i < pd.length; i++) {
+      d = pd[i]; pct = Math.round(Math.abs(d.pnl)/maxA*130); c = d.pnl>=0?"#22c55e":"#ef4444";
+      bv = (d.pnl>=0?"+":"") + n(d.pnl);
+      bhtml += "<div style='display:table-cell;text-align:center;vertical-align:bottom;padding:0 4px'>" +
+        "<div style='font-size:9px;font-weight:700;color:"+c+";margin-bottom:3px'>"+bv+"</div>" +
+        "<div style='width:100%;height:"+pct+"px;background:"+c+";border-radius:4px 4px 0 0;display:block'></div>" +
+        "<div style='font-size:9px;color:#94a3b8;margin-top:3px'>"+d.name+"</div>" +
+        "</div>";
+    }
+    bhtml += "</div></div>";
+    ba.innerHTML = bhtml;
+  }
+
+  total = 0;
+  for (i = 0; i < h.length; i++) total += h[i].cost;
+  var pa = ge("pie-area");
+  if (!h.length || !total) {
+    pa.innerHTML = "<div style='color:#64748b;text-align:center;padding:32px'>\u4fdd\u6709\u682a\u304c\u3042\u308a\u307e\u305b\u3093</div>";
+  } else {
+    sa = -Math.PI/2; R = 80; cx = 100; cy = 100; paths = ""; legendHTML = "<div style='text-align:center;margin-top:10px'>";
+    for (i = 0; i < h.length; i++) {
+      ratio = h[i].cost/total; ang = ratio*2*Math.PI;
+      x1 = cx+R*Math.cos(sa); y1 = cy+R*Math.sin(sa); sa += ang;
+      x2 = cx+R*Math.cos(sa); y2 = cy+R*Math.sin(sa);
+      lg = ang > Math.PI ? 1 : 0;
+      paths += "<path d='M"+cx+","+cy+" L"+x1.toFixed(1)+","+y1.toFixed(1)+" A"+R+","+R+" 0 "+lg+",1 "+x2.toFixed(1)+","+y2.toFixed(1)+" Z' fill='"+COLORS[i%COLORS.length]+"' stroke='#1e293b' stroke-width='2'/>";
+      legendHTML += "<span style='display:inline-block;margin:3px 6px;font-size:11px'><span style='display:inline-block;width:8px;height:8px;border-radius:50%;background:"+COLORS[i%COLORS.length]+";margin-right:4px;vertical-align:middle'></span>"+h[i].name+" "+Math.round(ratio*100)+"%</span>";
+    }
+    legendHTML += "</div>";
+    pa.innerHTML = "<div style='text-align:center'><svg width='200' height='200' viewBox='0 0 200 200'>"+paths+"</svg></div>" + legendHTML;
+  }
+}
+
+function openAdd() {
+  editingId = null;
+  ge("modal-title").textContent = "\uFF0B \u53d6\u5f15\u3092\u8ffd\u52a0";
+  ge("f-code").value = ""; ge("f-name").value = ""; ge("f-date").value = "";
+  ge("f-price").value = ""; ge("f-qty").value = "";
+  setType("buy"); setAcc("nisa");
+  ge("btn-submit").textContent = "\u8ffd\u52a0\u3059\u308b";
+  ge("btn-submit").style.background = "linear-gradient(135deg,#3b82f6,#2563eb)";
+  ge("amt-box").style.display = "none";
+  ge("modal-bg").classList.remove("hidden");
+}
+
+function openEdit(id) {
+  var t = null, i;
+  for (i = 0; i < trades.length; i++) { if (trades[i].id === id) { t = trades[i]; break; } }
+  if (!t) return;
+  editingId = id;
+  ge("modal-title").textContent = "\u270F\uFE0F \u53d6\u5f15\u3092\u4fee\u6b63";
+  ge("f-code").value = t.code; ge("f-name").value = t.name; ge("f-date").value = t.date;
+  ge("f-price").value = String(t.price); ge("f-qty").value = String(t.qty);
+  setType(t.type); setAcc(t.account);
+  ge("btn-submit").textContent = "\u4fee\u6b63\u3092\u4fdd\u5b58";
+  ge("btn-submit").style.background = "linear-gradient(135deg,#f59e0b,#d97706)";
+  updateAmt();
+  ge("modal-bg").classList.remove("hidden");
+}
+
+function closeModal() { ge("modal-bg").classList.add("hidden"); editingId = null; }
+
+function setType(v) {
+  currentType = v;
+  ge("tbuy").className = "tbtn" + (v === "buy" ? " tbtn-on-buy" : "");
+  ge("tsell").className = "tbtn" + (v === "sell" ? " tbtn-on-sell" : "");
+}
+
+function setAcc(v) {
+  currentAcc = v;
+  var anisa = ge("anisa");
+  var atoku = ge("atoku");
+  var anisaTitle = ge("anisa-title");
+  if (anisa) anisa.className = "abtn" + (v === "nisa" ? " abtn-nisa" : "");
+  if (atoku) atoku.className = "abtn" + (v === "tokutei" ? " abtn-toku" : "");
+  if (anisaTitle) anisaTitle.style.color = v === "nisa" ? "#fbbf24" : "#64748b";
+}
+
+function updateAmt() {
+  var p = Number(ge("f-price").value), q = Number(ge("f-qty").value);
+  if (p && q) {
+    ge("amt-val").textContent = n(p*q) + "\u5186";
+    ge("amt-box").style.display = "block";
+  } else {
+    ge("amt-box").style.display = "none";
+  }
+}
+
+function submitForm() {
+  var code = ge("f-code").value.trim();
+  var name = ge("f-name").value.trim();
+  var date = ge("f-date").value;
+  var price = Number(ge("f-price").value);
+  var qty = Number(ge("f-qty").value);
+  var i;
+  if (!code || !name || !date || !price || !qty) {
+    alert("\u3059\u3079\u3066\u306e\u9805\u76ee\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044");
+    return;
+  }
+  if (editingId) {
+    for (i = 0; i < trades.length; i++) {
+      if (trades[i].id === editingId) {
+        trades[i] = {id:editingId,code:code,name:name,type:currentType,date:date,price:price,qty:qty,account:currentAcc};
+        break;
+      }
+    }
+  } else {
+    trades.push({id:Date.now(),code:code,name:name,type:currentType,date:date,price:price,qty:qty,account:currentAcc});
+  }
+  saveTrades(); closeModal(); showTab(currentTab);
+}
+
+function doDelete(id) {
+  var newArr = [], i;
+  if (!confirm("\u3053\u306e\u53d6\u5f15\u3092\u524a\u9664\u3057\u307e\u3059\u304b\uff1f")) return;
+  for (i = 0; i < trades.length; i++) { if (trades[i].id !== id) newArr.push(trades[i]); }
+  trades = newArr;
+  saveTrades(); showTab(currentTab);
+}
+
+function setFType(v) {
+  filterType = v;
+  ge("ft-all").className = "fbtn" + (v === "all" ? " fbtn-blue" : "");
+  ge("ft-buy").className = "fbtn" + (v === "buy" ? " fbtn-blue" : "");
+  ge("ft-sell").className = "fbtn" + (v === "sell" ? " fbtn-blue" : "");
+  renderTrades();
+}
+
+function setFAcc(v) {
+  filterAcc = v;
+  ge("fa-all").className = "fbtn" + (v === "all" ? " fbtn-gold" : "");
+  ge("fa-nisa").className = "fbtn" + (v === "nisa" ? " fbtn-gold" : "");
+  ge("fa-toku").className = "fbtn" + (v === "tokutei" ? " fbtn-gold" : "");
+  renderTrades();
+}
+
+function resetFilter() {
+  filterType = "all"; filterAcc = "all";
+  var kw = ge("kw"); if (kw) kw.value = "";
+  var df = ge("df"); if (df) df.value = "";
+  var dt = ge("dt"); if (dt) dt.value = "";
+  setFType("all"); setFAcc("all");
+}
+
+function doSort(k) {
+  if (sortK === k) sortUp = !sortUp; else { sortK = k; sortUp = true; }
+  renderTrades();
+}
+
+function doCSV() {
+  var rows = [], i, t, d, ds, blob, url, link;
+  rows.push("\u53d6\u5f15\u65e5,\u9298\u67c4\u30b3\u30fc\u30c9,\u9298\u67c4\u540d,\u58f2\u8cb7,\u682a\u6570,\u5358\u4fa1,\u53e3\u5ea7");
+  for (i = 0; i < trades.length; i++) {
+    t = trades[i];
+    rows.push(t.date+","+t.code+","+t.name+","+(t.type==="buy"?"\u8cb7\u3044":"\u58f2\u308a")+","+t.qty+","+t.price+","+(t.account==="nisa"?"NISA\u53e3\u5ea7":"\u7279\u5b9a\u53e3\u5ea7"));
+  }
+  blob = new Blob(["\uFEFF"+rows.join("\n")], {type:"text/csv;charset=utf-8;"});
+  url = URL.createObjectURL(blob);
+  link = document.createElement("a");
+  d = new Date();
+  ds = d.getFullYear()+"-"+zp(d.getMonth()+1)+"-"+zp(d.getDate());
+  link.href = url; link.download = "\u58f2\u8cb7\u8a18\u9332_"+ds+".csv";
+  link.click(); URL.revokeObjectURL(url);
+  showToast("\u{1F4E5} CSV\u3092\u4fdd\u5b58\u3057\u307e\u3057\u305f");
+}
+
+function testGas() {
+  if (!gasUrl) { showToast("\u26A0 GAS URL\u3092\u8a2d\u5b9a\u3057\u3066\u304f\u3060\u3055\u3044"); return; }
+  showToast("\u25BA \u63a5\u7d9a\u30c6\u30b9\u30c8\u4e2d...");
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", gasUrl + "?action=ping&_=" + Date.now(), true);
+  xhr.onload = function() {
+    var ok = false;
+    try { var d = JSON.parse(xhr.responseText); if (d.ok) ok = true; } catch(e) { ok = false; }
+    if (ok) { showToast("\u2601 \u63a5\u7d9a\u6210\u529f"); setCloudStatus("Google OK"); }
+    else { showToast("\u26A0 \u63a5\u7d9a\u5931\u6557"); }
+  };
+  xhr.onerror = function() { showToast("\u26A0 \u63a5\u7d9a\u5931\u6557"); };
+  xhr.send();
+}
+
+function saveToGoogle() {
+  if (!gasUrl) { showToast("\u26A0 \u8a2d\u5b9a\u30bf\u30d6\u3067GAS URL\u3092\u8a2d\u5b9a\u3057\u3066\u304f\u3060\u3055\u3044"); return; }
+  showToast("\u25BA Google\u306b\u4fdd\u5b58\u4e2d...");
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", gasUrl, true);
+  xhr.setRequestHeader("Content-Type", "text/plain;charset=utf-8");
+  xhr.onload = function() {
+    var ok = false;
+    try { var d = JSON.parse(xhr.responseText); if (d.ok) ok = true; } catch(e) { ok = false; }
+    if (ok) { showToast("\u2601 Google\u306b\u4fdd\u5b58\u3057\u307e\u3057\u305f"); setCloudStatus("Google\u4fdd\u5b58\u6e08"); }
+    else { showToast("\u26A0 Google\u4fdd\u5b58\u5931\u6557"); }
+  };
+  xhr.onerror = function() { showToast("\u26A0 Google\u4fdd\u5b58\u5931\u6557"); };
+  xhr.send(JSON.stringify({action:"saveTradesApp", trades:trades}));
+}
+
+function loadFromGoogle() {
+  if (!gasUrl) { showToast("\u26A0 \u8a2d\u5b9a\u30bf\u30d6\u3067GAS URL\u3092\u8a2d\u5b9a\u3057\u3066\u304f\u3060\u3055\u3044"); return; }
+  showToast("\u25BA Google\u304b\u3089\u8aad\u307f\u8fbc\u307f\u4e2d...");
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", gasUrl + "?action=loadTradesApp&_=" + Date.now(), true);
+  xhr.onload = function() {
+    var ok = false, data = null;
+    try { data = JSON.parse(xhr.responseText); if (data.ok && data.trades) ok = true; } catch(e) { ok = false; }
+    if (ok) {
+      trades = data.trades; saveTrades(); renderDashboard();
+      showToast("\u2601 Google\u304b\u3089\u8aad\u307f\u8fbc\u307f\u307e\u3057\u305f"); setCloudStatus("Google\u8aad\u8fbc\u6e08");
+    } else { showToast("\u26A0 Google\u8aad\u8fbc\u5931\u6557"); }
+  };
+  xhr.onerror = function() { showToast("\u26A0 Google\u8aad\u8fbc\u5931\u6557"); };
+  xhr.send();
+}
+
+loadGasUrl();
+renderDashboard();
+</script>
+</body>
+</html>
