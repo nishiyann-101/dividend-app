@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="売買管理">
+<title>売買管理アプリ</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0f172a;font-family:'Hiragino Sans',sans-serif;color:#e2e8f0;min-height:100vh;font-size:14px}
+input,button{font-family:inherit;font-size:14px}
+input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1)}
+.hidden{display:none!important}
+#header{background:rgba(255,255,255,0.04);border-bottom:1px solid rgba(255,255,255,0.08);padding:12px 14px}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.hdr-top h1{font-size:18px;font-weight:700;color:#f1f5f9}
+.hdr-top p{font-size:11px;color:#94a3b8}
+.cloud-chip{padding:5px 10px;border-radius:999px;border:1px solid rgba(59,130,246,0.3);background:rgba(59,130,246,0.08);color:#93c5fd;font-size:11px;font-weight:700;white-space:nowrap}
+.tab-area{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.tab-area button{padding:8px 12px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:600;background:rgba(255,255,255,0.07);color:#94a3b8}
+.tab-area button.on{background:#3b82f6;color:#fff}
+.act-area{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:6px}
+#main{max-width:1100px;margin:0 auto;padding:16px 12px 40px}
+.card{background:rgba(255,255,255,0.05);border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.08);margin-bottom:12px}
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;min-width:520px}
+th{text-align:left;padding:7px 9px;font-size:12px;color:#64748b;font-weight:600;white-space:nowrap;border-bottom:1px solid rgba(255,255,255,0.08);cursor:pointer}
+td{padding:8px 9px;font-size:12px;white-space:nowrap;border-bottom:1px solid rgba(255,255,255,0.04)}
+.bn{background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.35);padding:2px 6px;border-radius:5px;font-size:10px;font-weight:700}
+.bt{background:rgba(148,163,184,0.15);color:#94a3b8;border:1px solid rgba(148,163,184,0.25);padding:2px 6px;border-radius:5px;font-size:10px;font-weight:700}
+.bb{background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
+.bs{background:rgba(239,68,68,0.15);color:#ef4444;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
+.bp{background:rgba(99,102,241,0.15);color:#a5b4fc;border:1px solid rgba(99,102,241,0.3);padding:2px 6px;border-radius:5px;font-size:10px;font-weight:700}
+.sum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:12px}
+.sum-card{background:rgba(255,255,255,0.05);border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,0.08)}
+.hold-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin-bottom:12px}
+.hold-card{background:rgba(255,255,255,0.05);border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,0.08)}
+.hinfo{background:rgba(255,255,255,0.04);border-radius:7px;padding:8px 10px}
+.hinfo-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.bar-chart{display:flex;align-items:flex-end;gap:8px;height:150px;padding:0 4px}
+.bar-wrap{display:flex;flex-direction:column;align-items:center;flex:1;height:100%;justify-content:flex-end;gap:3px}
+.bar{border-radius:4px 4px 0 0;min-height:3px;width:100%}
+.pie-legend{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px}
+.search-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sfull{grid-column:1/-1}
+.ifield{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:7px;padding:8px 10px;color:#e2e8f0;outline:none}
+.frow{display:flex;gap:4px}
+.fbtn{flex:1;padding:6px 3px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;font-size:11px;font-weight:600;background:transparent;color:#64748b}
+.fbtn.ob{border-color:#60a5fa;background:rgba(96,165,250,0.15);color:#60a5fa}
+.fbtn.og{border-color:#fbbf24;background:rgba(251,191,36,0.15);color:#fbbf24}
+.btn-blue{padding:8px 14px;border-radius:8px;border:none;cursor:pointer;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;font-weight:700;font-size:13px}
+.btn-gold{padding:8px 14px;border-radius:8px;border:1px solid rgba(251,191,36,0.4);cursor:pointer;background:rgba(251,191,36,0.1);color:#fbbf24;font-weight:700;font-size:13px}
+.btn-red{padding:8px 14px;border-radius:8px;border:1px solid rgba(239,68,68,0.4);cursor:pointer;background:rgba(239,68,68,0.1);color:#ef4444;font-weight:700;font-size:13px}
+.btn-green{padding:8px 14px;border-radius:8px;border:1px solid rgba(34,197,94,0.4);cursor:pointer;background:rgba(34,197,94,0.1);color:#22c55e;font-weight:700;font-size:13px}
+.btn-gray{padding:6px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;background:rgba(255,255,255,0.06);color:#94a3b8;font-size:11px;font-weight:600}
+.btn-purple{padding:8px 14px;border-radius:8px;border:1px solid rgba(139,92,246,0.4);cursor:pointer;background:rgba(139,92,246,0.1);color:#a78bfa;font-weight:700;font-size:13px}
+.btn-edit{background:rgba(251,191,36,0.15);color:#fbbf24;border:none;border-radius:5px;padding:3px 8px;cursor:pointer;font-size:11px;font-weight:600}
+.btn-del{background:rgba(239,68,68,0.15);color:#ef4444;border:none;border-radius:5px;padding:3px 8px;cursor:pointer;font-size:11px;font-weight:600}
+#modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100;display:flex;align-items:center;justify-content:center;padding:12px}
+#modal-box{background:#1e293b;border-radius:14px;padding:22px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mfull{grid-column:1/-1}
+.flabel{font-size:11px;color:#94a3b8;margin-bottom:3px}
+.trow{display:flex;gap:7px}
+.tbtn{flex:1;padding:9px;border-radius:7px;border:2px solid rgba(255,255,255,0.1);cursor:pointer;background:transparent;color:#64748b;font-weight:700;font-size:13px}
+.tbtn.bon{border-color:#22c55e;background:rgba(34,197,94,0.15);color:#22c55e}
+.tbtn.son{border-color:#ef4444;background:rgba(239,68,68,0.15);color:#ef4444}
+.arow{display:flex;gap:7px}
+.abtn{flex:1;padding:10px 7px;border-radius:8px;border:2px solid rgba(255,255,255,0.1);cursor:pointer;background:transparent;text-align:left}
+.abtn.non{border-color:#fbbf24;background:rgba(251,191,36,0.12)}
+.abtn.ton{border-color:#94a3b8;background:rgba(148,163,184,0.12)}
+.abtitle{font-weight:700;font-size:12px;color:#64748b}
+.abtn.non .abtitle{color:#fbbf24}
+.abtn.ton .abtitle{color:#e2e8f0}
+.absub{font-size:10px;color:#64748b;margin-top:2px}
+.amt-box{margin-top:12px;background:rgba(59,130,246,0.1);border-radius:8px;padding:10px 13px;border:1px solid rgba(59,130,246,0.2)}
+.mbtns{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:16px}
+.btn-cancel{padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:#94a3b8;cursor:pointer;font-weight:600;width:100%}
+.btn-add{padding:10px;border-radius:8px;border:none;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;cursor:pointer;font-weight:700;width:100%}
+.btn-save{padding:10px;border-radius:8px;border:none;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;cursor:pointer;font-weight:700;width:100%}
+#savebadge{position:fixed;bottom:16px;right:16px;background:rgba(34,197,94,0.9);color:#fff;padding:6px 13px;border-radius:16px;font-size:12px;font-weight:700;z-index:200;opacity:0;transition:opacity 0.3s;pointer-events:none}
+#toastmsg{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:rgba(30,41,59,0.97);color:#e2e8f0;padding:10px 18px;border-radius:999px;font-size:12px;font-weight:700;z-index:220;opacity:0;pointer-events:none;transition:opacity 0.25s;border:1px solid rgba(255,255,255,0.12);white-space:nowrap}
+.save-banner{background:rgba(34,197,94,0.04);border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:7px;margin-bottom:12px}
+.gas-banner{background:rgba(139,92,246,0.06);border:1px solid rgba(139,92,246,0.2);border-radius:10px;padding:12px 14px;margin-bottom:12px}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block}
+.pie-item{display:flex;align-items:center;gap:4px;font-size:11px}
+.fw7{font-weight:700}
+.c-green{color:#22c55e}.c-red{color:#ef4444}.c-blue{color:#60a5fa}.c-gold{color:#f59e0b}.c-gray{color:#94a3b8}.c-white{color:#f1f5f9}.c-purple{color:#a78bfa}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div class="hdr-top">
+    <div>
+      <h1>📈 売買管理アプリ</h1>
+      <p>国内株 売買管理アプリ</p>
+    </div>
+    <div class="cloud-chip" id="cloudStatus">ローカル保存中</div>
+  </div>
+  <div class="tab-area">
+    <button id="tab-dashboard" class="on" onclick="showTab('dashboard')">ダッシュボード</button>
+    <button id="tab-trades" onclick="showTab('trades')">売買履歴</button>
+    <button id="tab-holdings" onclick="showTab('holdings')">保有株</button>
+    <button id="tab-chart" onclick="showTab('chart')">グラフ</button>
+    <button id="tab-settings" onclick="showTab('settings')">⚙ 設定</button>
+  </div>
+  <div class="act-area">
+    <button class="btn-blue" onclick="openAdd()" style="font-size:12px">＋ 取引を追加</button>
+    <button class="btn-gold" onclick="showTab('trades')" style="font-size:12px">✏️ 取引を修正</button>
+    <button class="btn-red" onclick="showTab('trades')" style="font-size:12px">🗑️ 取引を削除</button>
+    <button class="btn-green" onclick="doCSV()" style="font-size:12px">📥 CSV保存</button>
+    <button class="btn-purple" onclick="saveToGoogle()" style="font-size:12px">☁ Google保存</button>
+    <button class="btn-gray" onclick="loadFromGoogle()" style="font-size:12px">☁ Google読込</button>
+  </div>
+</div>
+
+<div id="main">
+
+  <!-- ダッシュボード -->
+  <div id="page-dashboard">
+    <div class="sum-grid" id="sum-grid"></div>
+    <div class="save-banner">
+      <div>
+        <div class="fw7 c-green" style="font-size:13px">💾 3重バックアップ対応</div>
+        <div style="font-size:11px;color:#64748b;margin-top:2px">自動保存 + CSV + Google Sheets</div>
+      </div>
+      <button class="btn-green" onclick="doCSV()" style="font-size:12px">📥 CSVでバックアップ</button>
+    </div>
+    <div class="card">
+      <div class="fw7 c-white" style="margin-bottom:12px;font-size:14px">📋 直近の取引</div>
+      <div class="tscroll"><table id="recent-table"></table></div>
+    </div>
+  </div>
+
+  <!-- 売買履歴 -->
+  <div id="page-trades" class="hidden">
+    <div class="card">
+      <div class="fw7 c-white" style="margin-bottom:10px;font-size:13px">🔍 検索・絞り込み</div>
+      <div class="search-grid">
+        <div class="sfull"><div class="flabel">銘柄コード・銘柄名で検索</div><input class="ifield" type="text" id="kw" placeholder="例：7203 または トヨタ" oninput="renderTrades()"></div>
+        <div><div class="flabel">取引日（開始）</div><input class="ifield" type="date" id="df" onchange="renderTrades()" style="font-size:12px"></div>
+        <div><div class="flabel">取引日（終了）</div><input class="ifield" type="date" id="dt" onchange="renderTrades()" style="font-size:12px"></div>
+        <div><div class="flabel">売買</div><div class="frow"><button class="fbtn ob" id="ft-all" onclick="setFType('all')">すべて</button><button class="fbtn" id="ft-buy" onclick="setFType('buy')">買い</button><button class="fbtn" id="ft-sell" onclick="setFType('sell')">売り</button></div></div>
+        <div><div class="flabel">口座</div><div class="frow"><button class="fbtn og" id="fa-all" onclick="setFAcc('all')">すべて</button><button class="fbtn" id="fa-nisa" onclick="setFAcc('nisa')">NISA</button><button class="fbtn" id="fa-toku" onclick="setFAcc('tokutei')">特定</button></div></div>
+        <div class="sfull" style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:7px">
+          <button class="btn-gray" onclick="resetFilter()">🔄 検索をリセット</button>
+          <button class="btn-green" onclick="doCSV()" style="font-size:12px">📥 CSVでバックアップ</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="fw7 c-white" style="margin-bottom:12px;font-size:13px">📋 売買履歴 <span id="fcnt" style="font-size:12px;font-weight:400;color:#64748b"></span></div>
+      <div class="tscroll"><table id="trades-table"></table></div>
+    </div>
+  </div>
+
+  <!-- 保有株 -->
+  <div id="page-holdings" class="hidden">
+    <div class="fw7 c-white" style="margin-bottom:12px;font-size:14px">📦 保有株一覧</div>
+    <div class="hold-grid" id="hold-grid"></div>
+    <div id="realized-wrap"></div>
+  </div>
+
+  <!-- グラフ -->
+  <div id="page-chart" class="hidden">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px">
+      <div class="card"><div class="fw7 c-white" style="margin-bottom:12px">📊 銘柄別 実現損益</div><div id="bar-area"></div></div>
+      <div class="card"><div class="fw7 c-white" style="margin-bottom:12px">🥧 保有株の比率（投資額ベース）</div><div id="pie-area"></div></div>
+    </div>
+  </div>
+
+  <!-- 設定（GAS連携） -->
+  <div id="page-settings" class="hidden">
+    <div class="gas-banner">
+      <div class="fw7 c-purple" style="font-size:13px;margin-bottom:6px">☁ Googleドライブ連携設定</div>
+      <div style="font-size:11px;color:#64748b;line-height:1.7;margin-bottom:10px">
+        Google Apps ScriptのURLを設定すると、取引データをGoogleスプレッドシートに保存できます。<br>
+        機種変更後も「Google読込」ボタンでデータを復元できます。
+      </div>
+      <div style="margin-bottom:10px">
+        <div class="flabel">Google Apps Script WebアプリURL</div>
+        <input class="ifield" type="text" id="gas-url" placeholder="https://script.google.com/macros/s/.../exec" style="margin-top:4px">
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-blue" onclick="saveGasUrl()">URLを保存</button>
+        <button class="btn-gray" onclick="testGas()">接続テスト</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="fw7 c-white" style="margin-bottom:10px;font-size:14px">☁ クラウド操作</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+        <button class="btn-purple" onclick="saveToGoogle()">☁ Googleに保存</button>
+        <button class="btn-green" onclick="loadFromGoogle()">☁ Googleから読み込む</button>
+      </div>
+      <div style="font-size:11px;color:#64748b;line-height:1.8">
+        <div>・<b style="color:#a78bfa">Google保存</b>：今のデータをGoogleスプレッドシートに保存</div>
+        <div>・<b style="color:#22c55e">Google読込</b>：Googleスプレッドシートからデータを復元</div>
+        <div>・機種変更後は「Google読込」をタップするだけで復元できます</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="fw7 c-white" style="margin-bottom:10px;font-size:14px">💾 バックアップ状況</div>
+      <div style="font-size:12px;line-height:2">
+        <div>✅ <b>自動保存（ローカル）</b>：取引操作のたびに自動保存</div>
+        <div>📥 <b>CSVバックアップ</b>：手動でファイル保存</div>
+        <div id="gas-status-row">☁ <b>Googleドライブ</b>：<span id="gas-status-text" style="color:#64748b">URLが未設定です</span></div>
+      </div>
+      <div style="margin-top:12px">
+        <button class="btn-green" onclick="doCSV()">📥 今すぐCSVバックアップ</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 追加・修正モーダル -->
+<div id="modal-bg" class="hidden">
+  <div id="modal-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+      <div id="modal-title" class="fw7 c-white" style="font-size:16px"></div>
+      <button onclick="closeModal()" style="background:transparent;border:none;cursor:pointer;color:#64748b;font-size:18px">✕</button>
+    </div>
+    <div class="mgrid">
+      <div><div class="flabel">銘柄コード</div><input class="ifield" type="text" id="f-code" oninput="updateAmt()"></div>
+      <div><div class="flabel">銘柄名</div><input class="ifield" type="text" id="f-name"></div>
+      <div class="mfull"><div class="flabel">取引日</div><input class="ifield" type="date" id="f-date"></div>
+      <div class="mfull">
+        <div class="flabel">売買</div>
+        <div class="trow">
+          <button class="tbtn bon" id="tbuy" onclick="setType('buy')">買い</button>
+          <button class="tbtn" id="tsell" onclick="setType('sell')">売り</button>
+        </div>
+      </div>
+      <div><div class="flabel">単価（円）</div><input class="ifield" type="number" id="f-price" oninput="updateAmt()"></div>
+      <div><div class="flabel">株数</div><input class="ifield" type="number" id="f-qty" oninput="updateAmt()"></div>
+      <div class="mfull">
+        <div class="flabel">口座の種類</div>
+        <div class="arow">
+          <button class="abtn non" id="anisa" onclick="setAcc('nisa')">
+            <div class="abtitle">🌟 NISA口座</div><div class="absub">非課税・長期保有向け</div>
+          </button>
+          <button class="abtn" id="atoku" onclick="setAcc('tokutei')">
+            <div class="abtitle">🏦 特定口座</div><div class="absub">源泉徴収あり</div>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="amt-box hidden" id="amt-box">
+      <div style="font-size:11px;color:#94a3b8">取引金額</div>
+      <div id="amt-val" class="fw7 c-blue" style="font-size:15px;margin-top:3px"></div>
+    </div>
+    <div class="mbtns">
+      <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+      <button id="btn-submit" class="btn-add" onclick="submitForm()">追加する</button>
+    </div>
+  </div>
+</div>
+
+<div id="savebadge">✅ 自動保存しました</div>
+<div id="toastmsg"></div>
+
+<script>
+var SKEY = "smgr_v3";
+var GASKEY = "smgr_gas_url";
+var COLORS = ["#22c55e","#ef4444","#3b82f6","#f59e0b","#8b5cf6","#ec4899","#14b8a6","#f97316"];
+var currentType = "buy";
+var currentAcc = "nisa";
+var editingId = null;
+var filterType = "all";
+var filterAcc = "all";
+var sortK = "date";
+var sortUp = false;
+var currentTab = "dashboard";
+var gasUrl = "";
+
+function ge(id) { return document.getElementById(id); }
+
+function showToast(msg) {
+  var el = ge("toastmsg");
+  el.textContent = msg;
+  el.style.opacity = "1";
+  setTimeout(function() { el.style.opacity = "0"; }, 2000);
+}
+
+function setCloudStatus(msg) {
+  var el = ge("cloudStatus");
+  if (el) el.textContent = msg;
+}
+
+function n(v) { return Number(v).toLocaleString(); }
+
+function zp(v) { return v < 10 ? "0" + v : String(v); }
+
+function todayStr() {
+  var d = new Date();
+  return d.getFullYear() + "-" + zp(d.getMonth()+1) + "-" + zp(d.getDate());
+}
+
+function loadTrades() {
+  var s, parsed;
+  try {
+    s = localStorage.getItem(SKEY);
+    if (s) { parsed = JSON.parse(s); return parsed; }
+  } catch(e) {}
+  return [
+    {id:1,code:"7203",name:"\u30c8\u30e8\u30bf\u81ea\u52d5\u8eca",type:"buy",date:"2024-10-15",price:2800,qty:100,account:"nisa"},
+    {id:2,code:"7203",name:"\u30c8\u30e8\u30bf\u81ea\u52d5\u8eca",type:"sell",date:"2025-02-20",price:3050,qty:100,account:"nisa"},
+    {id:3,code:"6758",name:"\u30bd\u30cb\u30fc\u30b0\u30eb\u30fc\u30d7",type:"buy",date:"2025-01-10",price:13200,qty:50,account:"tokutei"},
+    {id:4,code:"9984",name:"\u30bd\u30d5\u30c8\u30d0\u30f3\u30afG",type:"buy",date:"2025-03-01",price:9400,qty:30,account:"tokutei"}
+  ];
+}
+
+var trades = loadTrades();
+
+function saveTrades() {
+  var el;
+  try {
+    localStorage.setItem(SKEY, JSON.stringify(trades));
+    el = ge("savebadge");
+    el.style.opacity = "1";
+    setTimeout(function() { el.style.opacity = "0"; }, 2000);
+    setCloudStatus("\u30ed\u30fc\u30ab\u30eb\u4fdd\u5b58\u6e08");
+  } catch(e) {}
+}
+
+function loadGasUrl() {
+  try { gasUrl = localStorage.getItem(GASKEY) || ""; } catch(e) { gasUrl = ""; }
+  var el = ge("gas-url");
+  if (el) el.value = gasUrl;
+  updateGasStatusRow();
+}
+
+function saveGasUrl() {
+  var v = ge("gas-url").value.trim();
+  gasUrl = v;
+  try { localStorage.setItem(GASKEY, v); } catch(e) {}
+  showToast(v ? "\u2601 URL\u3092\u4fdd\u5b58\u3057\u307e\u3057\u305f" : "URL\u3092\u30af\u30ea\u30a2\u3057\u307e\u3057\u305f");
+  updateGasStatusRow();
+}
+
+function updateGasStatusRow() {
+  var el = ge("gas-status-text");
+  if (!el) return;
+  if (gasUrl) {
+    el.style.color = "#22c55e";
+    el.textContent = "\u8a2d\u5b9a\u6e08\u307f\uff08\u6a5f\u7a2e\u5909\u66f4\u5f8c\u3082\u5fa9\u5143\u53ef\u80fd\uff09";
+  } else {
+    el.style.color = "#64748b";
+    el.textContent = "URL\u304c\u672a\u8a2d\u5b9a\u3067\u3059";
+  }
+}
+
+function holdStr(d) {
+  if (d >= 365) return Math.floor(d/365) + "\u5e74" + Math.floor((d%365)/30) + "\u30f6\u6708";
+  if (d >= 30) return Math.floor(d/30) + "\u30f6\u6708" + (d%30) + "\u65e5";
+  return d + "\u65e5";
+}
+
+function ab(account) {
+  return account === "nisa" ? "<span class='bn'>NISA</span>" : "<span class='bt'>\u7279\u5b9a</span>";
+}
+function tb2(type) {
+  return type === "buy" ? "<span class='bb'>\u8cb7\u3044</span>" : "<span class='bs'>\u58f2\u308a</span>";
+}
+function si(k) {
+  if (sortK !== k) return "<span style='opacity:0.3'>&#9660;</span>";
+  return sortUp ? "&#9650;" : "&#9660;";
+}
+
+function calcH() {
+  var map = {}, r = [], k, i, t, avg, x;
+  for (i = 0; i < trades.length; i++) {
+    t = trades[i];
+    if (t.type === "buy") {
+      if (!map[t.code]) map[t.code] = {code:t.code,name:t.name,qty:0,cost:0,account:t.account};
+      map[t.code].qty += t.qty;
+      map[t.code].cost += t.price * t.qty;
+    }
+  }
+  for (i = 0; i < trades.length; i++) {
+    t = trades[i];
+    if (t.type === "sell" && map[t.code] && map[t.code].qty > 0) {
+      avg = map[t.code].cost / map[t.code].qty;
+      map[t.code].qty -= t.qty;
+      map[t.code].cost -= avg * t.qty;
+    }
+  }
+  for (k in map) {
+    x = map[k];
+    if (x.qty > 0) { x.avg = Math.round(x.cost / x.qty); r.push(x); }
+  }
+  return r;
+}
+
+function calcR() {
+  var bm = {}, res = [], i, t, avg, pnl, days;
+  var sorted = trades.slice().sort(function(a,b) {
+    return a.date < b.date ? -1 : a.date > b.date ? 1 : 0;
+  });
+  for (i = 0; i < sorted.length; i++) {
+    t = sorted[i];
+    if (t.type === "buy") {
+      if (!bm[t.code]) bm[t.code] = {qty:0,cost:0,account:t.account,buyDate:t.date};
+      bm[t.code].qty += t.qty;
+      bm[t.code].cost += t.price * t.qty;
+    } else if (bm[t.code] && bm[t.code].qty > 0) {
+      avg = bm[t.code].cost / bm[t.code].qty;
+      pnl = Math.round(t.price * t.qty - avg * t.qty);
+      days = Math.round((new Date(t.date) - new Date(bm[t.code].buyDate)) / 86400000);
+      res.push({code:t.code,name:t.name,date:t.date,price:t.price,qty:t.qty,pnl:pnl,account:bm[t.code].account,holdDays:days});
+      bm[t.code].qty -= t.qty;
+      bm[t.code].cost -= avg * t.qty;
+    }
+  }
+  return res;
+}
+
+function getFiltered() {
+  var kw = ge("kw") ? ge("kw").value.toLowerCase().trim() : "";
+  var df = ge("df") ? ge("df").value : "";
+  var dt = ge("dt") ? ge("dt").value : "";
+  return trades.slice().sort(function(a,b) {
+    var va = a[sortK], vb = b[sortK];
+    if (va < vb) return sortUp ? -1 : 1;
+    if (va > vb) return sortUp ? 1 : -1;
+    return 0;
+  }).filter(function(t) {
+    if (kw && t.code.toLowerCase().indexOf(kw) < 0 && t.name.toLowerCase().indexOf(kw) < 0) return false;
+    if (df && t.date < df) return false;
+    if (dt && t.date > dt) return false;
+    if (filterType !== "all" && t.type !== filterType) return false;
+    if (filterAcc !== "all" && t.account !== filterAcc) return false;
+    return true;
+  });
+}
+
+function showTab(name) {
+  var pages = ["dashboard","trades","holdings","chart","settings"];
+  var i, p, tb;
+  currentTab = name;
+  for (i = 0; i < pages.length; i++) {
+    p = ge("page-" + pages[i]);
+    tb = ge("tab-" + pages[i]);
+    if (p) { if (pages[i] === name) p.classList.remove("hidden"); else p.classList.add("hidden"); }
+    if (tb) { if (pages[i] === name) tb.classList.add("on"); else tb.classList.remove("on"); }
+  }
+  if (name === "dashboard") renderDashboard();
+  if (name === "trades") renderTrades();
+  if (name === "holdings") renderHoldings();
+  if (name === "chart") renderChart();
+  if (name === "settings") loadGasUrl();
+}
+
+function renderDashboard() {
+  var h = calcH(), r = calcR(), i, t, tPnL = 0, tInv = 0;
+  for (i = 0; i < r.length; i++) tPnL += r[i].pnl;
+  for (i = 0; i < h.length; i++) tInv += h[i].cost;
+  var pc = tPnL >= 0 ? "#22c55e" : "#ef4444";
+  ge("sum-grid").innerHTML =
+    "<div class='sum-card'><div style='font-size:11px;color:#94a3b8;margin-bottom:5px'>\u5b9f\u73fe\u640d\u76ca\uff08\u5408\u8a08\uff09</div><div class='fw7' style='font-size:20px;color:"+pc+"'>"+(tPnL>=0?"+":"")+n(tPnL)+"\u5186</div></div>" +
+    "<div class='sum-card'><div style='font-size:11px;color:#94a3b8;margin-bottom:5px'>\u6295\u8cc4\u4e2d\u306e\u7dcf\u984d</div><div class='fw7' style='font-size:20px;color:#60a5fa'>"+n(Math.round(tInv))+"\u5186</div></div>" +
+    "<div class='sum-card'><div style='font-size:11px;color:#94a3b8;margin-bottom:5px'>\u4fdd\u6709\u9298\u67c4\u6570</div><div class='fw7' style='font-size:20px;color:#f59e0b'>"+h.length+"\u9298\u67c4</div></div>" +
+    "<div class='sum-card'><div style='font-size:11px;color:#94a3b8;margin-bottom:5px'>\u53d6\u5f15\u56de\u6570</div><div class='fw7' style='font-size:20px;color:#8b5cf6'>"+trades.length+"\u56de</div></div>";
+  var rec = trades.slice().reverse().slice(0,5);
+  var html = "<thead><tr><th style='cursor:default'>\u65e5\u4ed8</th><th style='cursor:default'>\u30b3\u30fc\u30c9</th><th style='cursor:default'>\u9298\u67c4\u540d</th><th style='cursor:default'>\u58f2\u8cb7</th><th style='cursor:default'>\u682a\u6570</th><th style='cursor:default'>\u5358\u4fa1</th><th style='cursor:default'>\u53e3\u5ea7</th></tr></thead><tbody>";
+  for (i = 0; i < rec.length; i++) {
+    t = rec[i];
+    html += "<tr><td class='c-gray'>"+t.date+"</td><td class='fw7 c-blue'>"+t.code+"</td><td>"+t.name+"</td><td>"+tb2(t.type)+"</td><td>"+n(t.qty)+"\u682a</td><td>"+n(t.price)+"\u5186</td><td>"+ab(t.account)+"</td></tr>";
+  }
+  ge("recent-table").innerHTML = html + "</tbody>";
+}
+
+function renderTrades() {
+  var filt = getFiltered(), i, t;
+  var fc = ge("fcnt"); if (fc) fc.textContent = filt.length + "\u4ef6 / \u5168" + trades.length + "\u4ef6";
+  var html = "<thead><tr>" +
+    "<th onclick='doSort(\"date\")'>\u65e5\u4ed8 "+si("date")+"</th>" +
+    "<th onclick='doSort(\"code\")'>\u30b3\u30fc\u30c9 "+si("code")+"</th>" +
+    "<th onclick='doSort(\"name\")'>\u9298\u67c4\u540d "+si("name")+"</th>" +
+    "<th onclick='doSort(\"type\")'>\u58f2\u8cb7 "+si("type")+"</th>" +
+    "<th onclick='doSort(\"qty\")'>\u682a\u6570 "+si("qty")+"</th>" +
+    "<th onclick='doSort(\"price\")'>\u5358\u4fa1 "+si("price")+"</th>" +
+    "<th style='cursor:default'>\u53e3\u5ea7</th><th style='cursor:default'>\u64cd\u4f5c</th></tr></thead><tbody>";
+  if (!filt.length) {
+    html += "<tr><td colspan='8' style='padding:24px;text-align:center;color:#64748b'>\u8a72\u5f53\u3059\u308b\u53d6\u5f15\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093</td></tr>";
+  } else {
+    for (i = 0; i < filt.length; i++) {
+      t = filt[i];
+      html += "<tr><td class='c-gray'>"+t.date+"</td><td class='fw7 c-blue'>"+t.code+"</td><td>"+t.name+"</td><td>"+tb2(t.type)+"</td><td>"+n(t.qty)+"</td><td>"+n(t.price)+"\u5186</td><td>"+ab(t.account)+"</td><td><button class='btn-edit' onclick='openEdit("+t.id+")'>\u4fee\u6b63</button> <button class='btn-del' onclick='doDelete("+t.id+")'>\u524a\u9664</button></td></tr>";
+    }
+  }
+  ge("trades-table").innerHTML = html + "</tbody>";
+}
+
+function renderHoldings() {
+  var h = calcH(), r = calcR(), i, x, html = "";
+  var tPnL = 0;
+  for (i = 0; i < r.length; i++) tPnL += r[i].pnl;
+  if (!h.length) {
+    ge("hold-grid").innerHTML = "<div class='card c-gray' style='text-align:center'>\u73fe\u5728\u4fdd\u6709\u3057\u3066\u3044\u308b\u682a\u306f\u3042\u308a\u307e\u305b\u3093</div>";
+  } else {
+    for (i = 0; i < h.length; i++) {
+      x = h[i];
+      html += "<div class='hold-card'><div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px'><div><div class='fw7 c-blue' style='font-size:14px'>"+x.code+"</div><div class='fw7' style='font-size:12px;margin-top:2px'>"+x.name+"</div></div><div style='display:flex;flex-direction:column;align-items:flex-end;gap:4px'><span class='dot' style='background:"+COLORS[i%COLORS.length]+"'></span>"+ab(x.account)+"</div></div><div class='hinfo-grid'><div class='hinfo'><div style='font-size:10px;color:#64748b;margin-bottom:2px'>\u4fdd\u6709\u682a\u6570</div><div class='fw7' style='font-size:13px'>"+n(x.qty)+"\u682a</div></div><div class='hinfo'><div style='font-size:10px;color:#64748b;margin-bottom:2px'>\u5e73\u5747\u53d6\u5f97\u5358\u4fa1</div><div class='fw7' style='font-size:13px'>"+n(x.avg)+"\u5186</div></div><div class='hinfo' style='grid-column:1/-1'><div style='font-size:10px;color:#64748b;margin-bottom:2px'>\u6295\u8cc4\u7dcf\u984d</div><div class='fw7 c-gold' style='font-size:13px'>"+n(Math.round(x.cost))+"\u5186</div></div></div></div>";
+    }
+    ge("hold-grid").innerHTML = html;
+  }
+  var rw = ge("realized-wrap");
+  if (!r.length) { rw.innerHTML = ""; return; }
+  var pnlColor = tPnL >= 0 ? "#22c55e" : "#ef4444";
+  html = "<div class='card'><div class='fw7 c-white' style='margin-bottom:12px'>\u2705 \u5b9f\u73fe\u640d\u76ca\uff08\u58f2\u5374\u6e08\u307f\uff09</div><div class='tscroll'><table><thead><tr><th style='cursor:default'>\u65e5\u4ed8</th><th style='cursor:default'>\u30b3\u30fc\u30c9</th><th style='cursor:default'>\u9298\u67c4\u540d</th><th style='cursor:default'>\u53e3\u5ea7</th><th style='cursor:default'>\u4fdd\u6709\u671f\u9593</th><th style='cursor:default'>\u682a\u6570</th><th style='cursor:default'>\u58f2\u5374\u5358\u4fa1</th><th style='cursor:default'>\u640d\u76ca</th></tr></thead><tbody>";
+  for (i = 0; i < r.length; i++) {
+    x = r[i];
+    var pc = x.pnl >= 0 ? "#22c55e" : "#ef4444";
+    html += "<tr><td class='c-gray'>"+x.date+"</td><td class='fw7 c-blue'>"+x.code+"</td><td>"+x.name+"</td><td>"+ab(x.account)+"</td><td><span class='bp'>"+holdStr(x.holdDays)+"</span></td><td>"+n(x.qty)+"\u682a</td><td>"+n(x.price)+"\u5186</td><td class='fw7' style='color:"+pc+"'>"+(x.pnl>=0?"+":"")+n(x.pnl)+"\u5186</td></tr>";
+  }
+  html += "<tr style='border-top:2px solid rgba(255,255,255,0.15)'><td colspan='7' style='padding:8px;font-weight:700;text-align:right'>\u5408\u8a08</td><td style='padding:8px;font-weight:700;font-size:15px;color:"+pnlColor+"'>"+(tPnL>=0?"+":"")+n(tPnL)+"\u5186</td></tr></tbody></table></div></div>";
+  rw.innerHTML = html;
+}
+
+function renderChart() {
+  var h = calcH(), r = calcR(), i, d, pct, c, bv;
+  var pmap = {}, k, pd = [], maxA, total, sa, R, cx, cy;
+  var ratio, ang, x1, y1, x2, y2, lg, paths, legendHTML;
+  for (i = 0; i < r.length; i++) pmap[r[i].name] = (pmap[r[i].name] || 0) + r[i].pnl;
+  for (k in pmap) pd.push({name:k, pnl:pmap[k]});
+  if (!pd.length) {
+    ge("bar-area").innerHTML = "<div style='color:#64748b;text-align:center;padding:32px'>\u58f2\u5374\u30c7\u30fc\u30bf\u304c\u3042\u308a\u307e\u305b\u3093</div>";
+  } else {
+    maxA = 0;
+    for (i = 0; i < pd.length; i++) if (Math.abs(pd[i].pnl) > maxA) maxA = Math.abs(pd[i].pnl);
+    if (maxA === 0) maxA = 1;
+    var bhtml = "<div class='bar-chart'>";
+    for (i = 0; i < pd.length; i++) {
+      d = pd[i]; pct = Math.round(Math.abs(d.pnl)/maxA*140); c = d.pnl>=0?"#22c55e":"#ef4444";
+      bv = (d.pnl>=0?"+":"") + n(d.pnl);
+      bhtml += "<div class='bar-wrap'><div style='font-size:9px;font-weight:700;color:"+c+"'>"+bv+"</div><div class='bar' style='height:"+pct+"px;background:"+c+"'></div><div style='font-size:9px;color:#94a3b8;text-align:center'>"+d.name+"</div></div>";
+    }
+    ge("bar-area").innerHTML = bhtml + "</div>";
+  }
+  total = 0;
+  for (i = 0; i < h.length; i++) total += h[i].cost;
+  if (!h.length || !total) {
+    ge("pie-area").innerHTML = "<div style='color:#64748b;text-align:center;padding:32px'>\u4fdd\u6709\u682a\u304c\u3042\u308a\u307e\u305b\u3093</div>";
+  } else {
+    sa = -Math.PI/2; R = 80; cx = 100; cy = 100; paths = ""; legendHTML = "<div class='pie-legend'>";
+    for (i = 0; i < h.length; i++) {
+      ratio = h[i].cost/total; ang = ratio*2*Math.PI;
+      x1 = cx+R*Math.cos(sa); y1 = cy+R*Math.sin(sa); sa += ang;
+      x2 = cx+R*Math.cos(sa); y2 = cy+R*Math.sin(sa);
+      lg = ang > Math.PI ? 1 : 0;
+      paths += "<path d='M"+cx+","+cy+" L"+x1.toFixed(1)+","+y1.toFixed(1)+" A"+R+","+R+" 0 "+lg+",1 "+x2.toFixed(1)+","+y2.toFixed(1)+" Z' fill='"+COLORS[i%COLORS.length]+"' stroke='#1e293b' stroke-width='2'/>";
+      legendHTML += "<div class='pie-item'><span class='dot' style='background:"+COLORS[i%COLORS.length]+"'></span>"+h[i].name+" "+Math.round(ratio*100)+"%</div>";
+    }
+    ge("pie-area").innerHTML = "<div style='display:flex;justify-content:center'><svg width='200' height='200' viewBox='0 0 200 200'>"+paths+"</svg></div>"+legendHTML+"</div>";
+  }
+}
+
+function openAdd() {
+  editingId = null;
+  ge("modal-title").textContent = "\uFF0B \u53d6\u5f15\u3092\u8ffd\u52a0";
+  ge("f-code").value = ""; ge("f-name").value = ""; ge("f-date").value = "";
+  ge("f-price").value = ""; ge("f-qty").value = "";
+  setType("buy"); setAcc("nisa");
+  ge("btn-submit").className = "btn-add";
+  ge("btn-submit").textContent = "\u8ffd\u52a0\u3059\u308b";
+  ge("amt-box").classList.add("hidden");
+  ge("modal-bg").classList.remove("hidden");
+}
+
+function openEdit(id) {
+  var t = null, i;
+  for (i = 0; i < trades.length; i++) { if (trades[i].id === id) { t = trades[i]; break; } }
+  if (!t) return;
+  editingId = id;
+  ge("modal-title").textContent = "\u270F\uFE0F \u53d6\u5f15\u3092\u4fee\u6b63";
+  ge("f-code").value = t.code; ge("f-name").value = t.name; ge("f-date").value = t.date;
+  ge("f-price").value = String(t.price); ge("f-qty").value = String(t.qty);
+  setType(t.type); setAcc(t.account);
+  ge("btn-submit").className = "btn-save";
+  ge("btn-submit").textContent = "\u4fee\u6b63\u3092\u4fdd\u5b58";
+  updateAmt();
+  ge("modal-bg").classList.remove("hidden");
+}
+
+function closeModal() { ge("modal-bg").classList.add("hidden"); editingId = null; }
+
+function setType(v) {
+  currentType = v;
+  ge("tbuy").className = "tbtn" + (v === "buy" ? " bon" : "");
+  ge("tsell").className = "tbtn" + (v === "sell" ? " son" : "");
+}
+
+function setAcc(v) {
+  currentAcc = v;
+  ge("anisa").className = "abtn" + (v === "nisa" ? " non" : "");
+  ge("atoku").className = "abtn" + (v === "tokutei" ? " ton" : "");
+}
+
+function updateAmt() {
+  var p = Number(ge("f-price").value), q = Number(ge("f-qty").value);
+  if (p && q) { ge("amt-val").textContent = n(p*q) + "\u5186"; ge("amt-box").classList.remove("hidden"); }
+  else ge("amt-box").classList.add("hidden");
+}
+
+function submitForm() {
+  var code = ge("f-code").value.trim();
+  var name = ge("f-name").value.trim();
+  var date = ge("f-date").value;
+  var price = Number(ge("f-price").value);
+  var qty = Number(ge("f-qty").value);
+  var i;
+  if (!code || !name || !date || !price || !qty) { alert("\u3059\u3079\u3066\u306e\u9805\u76ee\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044"); return; }
+  if (editingId) {
+    for (i = 0; i < trades.length; i++) {
+      if (trades[i].id === editingId) {
+        trades[i] = {id:editingId,code:code,name:name,type:currentType,date:date,price:price,qty:qty,account:currentAcc};
+        break;
+      }
+    }
+  } else {
+    trades.push({id:Date.now(),code:code,name:name,type:currentType,date:date,price:price,qty:qty,account:currentAcc});
+  }
+  saveTrades(); closeModal(); showTab(currentTab);
+}
+
+function doDelete(id) {
+  var newArr = [], i;
+  if (!confirm("\u3053\u306e\u53d6\u5f15\u3092\u524a\u9664\u3057\u307e\u3059\u304b\uff1f")) return;
+  for (i = 0; i < trades.length; i++) { if (trades[i].id !== id) newArr.push(trades[i]); }
+  trades = newArr;
+  saveTrades(); showTab(currentTab);
+}
+
+function setFType(v) {
+  filterType = v;
+  ge("ft-all").className = "fbtn" + (v === "all" ? " ob" : "");
+  ge("ft-buy").className = "fbtn" + (v === "buy" ? " ob" : "");
+  ge("ft-sell").className = "fbtn" + (v === "sell" ? " ob" : "");
+  renderTrades();
+}
+
+function setFAcc(v) {
+  filterAcc = v;
+  ge("fa-all").className = "fbtn" + (v === "all" ? " og" : "");
+  ge("fa-nisa").className = "fbtn" + (v === "nisa" ? " og" : "");
+  ge("fa-toku").className = "fbtn" + (v === "tokutei" ? " og" : "");
+  renderTrades();
+}
+
+function resetFilter() {
+  filterType = "all"; filterAcc = "all";
+  var kw = ge("kw"); if (kw) kw.value = "";
+  var df = ge("df"); if (df) df.value = "";
+  var dt = ge("dt"); if (dt) dt.value = "";
+  setFType("all"); setFAcc("all");
+}
+
+function doSort(k) {
+  if (sortK === k) sortUp = !sortUp; else { sortK = k; sortUp = true; }
+  renderTrades();
+}
+
+function doCSV() {
+  var rows = [], i, t, d, ds, blob, url, link;
+  rows.push("\u53d6\u5f15\u65e5,\u9298\u67c4\u30b3\u30fc\u30c9,\u9298\u67c4\u540d,\u58f2\u8cb7,\u682a\u6570,\u5358\u4fa1,\u53e3\u5ea7");
+  for (i = 0; i < trades.length; i++) {
+    t = trades[i];
+    rows.push(t.date+","+t.code+","+t.name+","+(t.type==="buy"?"\u8cb7\u3044":"\u58f2\u308a")+","+t.qty+","+t.price+","+(t.account==="nisa"?"NISA\u53e3\u5ea7":"\u7279\u5b9a\u53e3\u5ea7"));
+  }
+  blob = new Blob(["\uFEFF"+rows.join("\n")], {type:"text/csv;charset=utf-8;"});
+  url = URL.createObjectURL(blob);
+  link = document.createElement("a");
+  d = new Date();
+  ds = d.getFullYear()+"-"+zp(d.getMonth()+1)+"-"+zp(d.getDate());
+  link.href = url; link.download = "\u58f2\u8cb7\u8a18\u9332_"+ds+".csv";
+  link.click(); URL.revokeObjectURL(url);
+  showToast("\u{1F4E5} CSV\u3092\u4fdd\u5b58\u3057\u307e\u3057\u305f");
+}
+
+/* ===== Google Apps Script連携 ===== */
+function testGas() {
+  if (!gasUrl) { showToast("\u26A0 \u5148\u306bGAS URL\u3092\u8a2d\u5b9a\u3057\u3066\u304f\u3060\u3055\u3044"); return; }
+  showToast("\u25BA \u63a5\u7d9a\u30c6\u30b9\u30c8\u4e2d...");
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", gasUrl + "?action=ping&_=" + Date.now(), true);
+  xhr.onload = function() {
+    try {
+      var d = JSON.parse(xhr.responseText);
+      if (d.ok) { showToast("\u2601 \u63a5\u7d9a\u30c6\u30b9\u30c8\u6210\u529f"); setCloudStatus("Google\u63a5\u7d9aOK"); }
+      else throw new Error();
+    } catch(e) { showToast("\u26A0 \u63a5\u7d9a\u30c6\u30b9\u30c8\u5931\u6557"); }
+  };
+  xhr.onerror = function() { showToast("\u26A0 \u63a5\u7d9a\u30c6\u30b9\u30c8\u5931\u6557"); };
+  xhr.send();
+}
+
+function saveToGoogle() {
+  if (!gasUrl) { showToast("\u26A0 \u5148\u306b\u8a2d\u5b9a\u30bf\u30d6\u3067GAS URL\u3092\u8a2d\u5b9a\u3057\u3066\u304f\u3060\u3055\u3044"); return; }
+  showToast("\u25BA Google\u306b\u4fdd\u5b58\u4e2d...");
+  var xhr = new XMLHttpRequest();
+  var payload = JSON.stringify({action:"saveTradesApp", trades:trades});
+  xhr.open("POST", gasUrl, true);
+  xhr.setRequestHeader("Content-Type", "text/plain;charset=utf-8");
+  xhr.onload = function() {
+    try {
+      var d = JSON.parse(xhr.responseText);
+      if (d.ok) { showToast("\u2601 Google\u306b\u4fdd\u5b58\u3057\u307e\u3057\u305f"); setCloudStatus("Google\u4fdd\u5b58\u6e08"); }
+      else throw new Error();
+    } catch(e) { showToast("\u26A0 Google\u4fdd\u5b58\u306b\u5931\u6557\u3057\u307e\u3057\u305f"); }
+  };
+  xhr.onerror = function() { showToast("\u26A0 Google\u4fdd\u5b58\u306b\u5931\u6557\u3057\u307e\u3057\u305f"); };
+  xhr.send(payload);
+}
+
+function loadFromGoogle() {
+  if (!gasUrl) { showToast("\u26A0 \u5148\u306b\u8a2d\u5b9a\u30bf\u30d6\u3067GAS URL\u3092\u8a2d\u5b9a\u3057\u3066\u304f\u3060\u3055\u3044"); return; }
+  showToast("\u25BA Google\u304b\u3089\u8aad\u307f\u8fbc\u307f\u4e2d...");
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", gasUrl + "?action=loadTradesApp&_=" + Date.now(), true);
+  xhr.onload = function() {
+    try {
+      var d = JSON.parse(xhr.responseText);
+      if (d.ok && d.trades) {
+        trades = d.trades;
+        saveTrades();
+        renderDashboard();
+        showToast("\u2601 Google\u304b\u3089\u8aad\u307f\u8fbc\u307f\u307e\u3057\u305f");
+        setCloudStatus("Google\u8aad\u8fbc\u6e08");
+      } else throw new Error();
+    } catch(e) { showToast("\u26A0 Google\u8aad\u8fbc\u306b\u5931\u6557\u3057\u307e\u3057\u305f"); }
+  };
+  xhr.onerror = function() { showToast("\u26A0 Google\u8aad\u8fbc\u306b\u5931\u6557\u3057\u307e\u3057\u305f"); };
+  xhr.send();
+}
+
+loadGasUrl();
+renderDashboard();
+</script>
+</body>
+</html>
